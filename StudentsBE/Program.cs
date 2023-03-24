@@ -1,7 +1,11 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using StudentsBE.Context;
 using StudentsBE.Profiles;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +19,26 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddCors(opt =>
 {
     opt.AddPolicy("webApp", builder => builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+});
+
+builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+    .AddEntityFrameworkStores<ContextDB>()
+    .AddDefaultTokenProviders();
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(opt => opt.TokenValidationParameters = new TokenValidationParameters{
+        ValidateIssuer = false,
+        ValidateAudience= false,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey= true,
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(builder.Configuration["JwtKey"])),
+        ClockSkew= TimeSpan.Zero
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("IsAdmin", policy => policy.RequireClaim("role", "admin"));
 });
 
 builder.Services.AddDbContext<ContextDB>(options =>

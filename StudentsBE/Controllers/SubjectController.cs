@@ -1,19 +1,30 @@
+using AutoMapper;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StudentsBE.Context;
 using StudentsBE.DTO;
+using StudentsBE.DTO.Subject;
+using StudentsBE.Models;
 
 namespace StudentsBE.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
-    public class ScoreSubjectController
+    [Route("api/[controller]")]
+    [Authorize(Roles ="admin")]
+    public class SubjectController : Controller
     {
 
         private readonly ContextDB _db;
-        public ScoreSubjectController(ContextDB db)
+
+        private readonly IMapper _mapper;
+
+        public SubjectController(ContextDB db, IMapper mapper)
         {
             _db = db;
+
+            _mapper = mapper;
         }
 
         public struct scoresDto
@@ -24,7 +35,7 @@ namespace StudentsBE.Controllers
         }
 
         [HttpPut]
-        public ActionResult UpdateScores([FromBody]List<scoresDto> newScores)
+        public ActionResult UpdateScores([FromBody] List<scoresDto> newScores)
         {
 
             var idsSearch = newScores.Select(x => x.id).ToList();
@@ -82,6 +93,27 @@ namespace StudentsBE.Controllers
 
             return new OkObjectResult(result);
         }
+
+        [HttpPost]
+        public async Task<IActionResult> Create([FromBody] SubjectCreateDto subject)
+        {
+            try
+            {
+                var newSubject = _mapper.Map<Subject>(subject);
+
+                await _db.AddAsync(newSubject);
+
+                await _db.SaveChangesAsync();
+
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+
 
 
     }

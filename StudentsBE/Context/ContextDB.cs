@@ -1,10 +1,11 @@
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using StudentsBE.Migrations;
 using StudentsBE.Models;
 
 namespace StudentsBE.Context
 {
-    public class ContextDB :DbContext
+    public class ContextDB : IdentityDbContext
     {
         public ContextDB(DbContextOptions<ContextDB> options) : base (options)
         { 
@@ -32,7 +33,11 @@ namespace StudentsBE.Context
             modelBuilder.ApplyConfiguration(new SubjectConfiguration());
 
             modelBuilder.ApplyConfiguration(new HabilitiesConfiguration());
+            
+            base.OnModelCreating(modelBuilder);
 
     }
+
+        
     }
 }
